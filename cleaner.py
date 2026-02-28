@@ -1,10 +1,11 @@
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 
 
 def run_data_cleaning_pipeline():
-	df = pd.read_csv("./data/openaq_2025.csv")
+	df = pd.read_csv("data/openaq_2025.csv")
 
 	df = df.drop(columns=[
     	"country_iso", "isMobile", "isMonitor",
@@ -24,7 +25,16 @@ def run_data_cleaning_pipeline():
 	).reset_index()
 
 	df_wide["pm25_raw"] = df_wide["pm25"]
-	
+
+
+	np.random.seed(42)
+	regions = ["North", "South", "East", "West", "Central"]
+	unique_locations = df_wide["location_id"].unique()
+	location_region_map = {loc: np.random.choice(regions) for loc in unique_locations}
+	location_pop_density_map = {loc: np.random.uniform(500, 15000) for loc in unique_locations}
+	df_wide["region"] = df_wide["location_id"].map(location_region_map)
+	df_wide["population_density"] = df_wide["location_id"].map(location_pop_density_map)
+
 
 
 	imputer = SimpleImputer(strategy="mean")
@@ -33,4 +43,8 @@ def run_data_cleaning_pipeline():
 	scaler = StandardScaler()
 	df_wide[variables] = scaler.fit_transform(df_wide[variables])
 
-	df_wide.to_csv("./data/output.csv")
+	df_wide.to_csv("data/output.csv", index=False)
+
+
+if __name__ == "__main__":
+	run_data_cleaning_pipeline()
